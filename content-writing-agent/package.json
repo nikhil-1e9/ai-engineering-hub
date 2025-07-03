@@ -1,14 +1,13 @@
 {
   "name": "content-writing-agent",
   "version": "1.0.0",
-  "description": "AI-powered content writing agent that scrapes articles and generates viral social media posts using Motia",
+  "description": "AI-powered content writing agent that scrapes developer articles and generates viral social media posts using Motia and Firecrawl",
   "main": "index.js",
   "scripts": {
     "setup": "node setup.js",
     "dev": "motia dev",
     "start": "motia start",
-    "build": "motia build",
-    "test": "jest"
+    "build": "motia build"
   },
   "keywords": [
     "motia",
@@ -22,16 +21,9 @@
   "license": "MIT",
   "dependencies": {
     "@motia/core": "^0.1.0",
-    "axios": "^1.6.0",
-    "cheerio": "^1.0.0-rc.12",
+    "@mendable/firecrawl-js": "^1.0.0",
     "openai": "^4.20.0",
-    "puppeteer": "^21.5.0",
     "dotenv": "^16.3.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.8.0",
-    "jest": "^29.7.0",
-    "typescript": "^5.2.0"
   },
   "engines": {
     "node": ">=18.0.0"

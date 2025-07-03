@@ -10,7 +10,7 @@ const rl = readline.createInterface({
 });
 
 console.log('🤖 Content Writing Agent Setup\n');
-console.log('This script will help you configure your environment variables.\n');
+console.log('This script will help you configure your API keys.\n');
 
 async function askQuestion(question) {
   return new Promise((resolve) => {
@@ -33,7 +33,7 @@ async function setup() {
       }
     }
 
-    console.log('Please provide the following configuration:\n');
+    console.log('Please provide your API keys:\n');
 
     // Get OpenAI API key
     const openaiKey = await askQuestion('OpenAI API Key (required): ');
@@ -43,38 +43,24 @@ async function setup() {
       return;
     }
 
-    // Get optional configurations
-    const model = await askQuestion('OpenAI Model (default: gpt-4): ') || 'gpt-4';
-    const temperature = await askQuestion('Content Temperature 0-1 (default: 0.7): ') || '0.7';
+    // Get Firecrawl API key
+    const firecrawlKey = await askQuestion('Firecrawl API Key (required): ');
+    if (!firecrawlKey.trim()) {
+      console.log('❌ Firecrawl API Key is required. Setup cancelled.');
+      rl.close();
+      return;
+    }
+
+    // Get optional port
     const port = await askQuestion('Motia Port (default: 3000): ') || '3000';
-    const webhookUrl = await askQuestion('Webhook URL (optional): ');
 
     // Create .env content
-    const envContent = `# OpenAI API Configuration
+    const envContent = `# Required API Keys
 OPENAI_API_KEY=${openaiKey}
-OPENAI_MODEL=${model}
-
-# Web Scraping Configuration
-USER_AGENT=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36
-REQUEST_TIMEOUT=30000
-MAX_RETRIES=3
-
-# Content Generation Settings
-MAX_TWEET_LENGTH=280
-MAX_LINKEDIN_LENGTH=3000
-CONTENT_TEMPERATURE=${temperature}
-
-# Rate Limiting
-SCRAPING_DELAY_MS=1000
-AI_REQUEST_DELAY_MS=500
+FIRECRAWL_API_KEY=${firecrawlKey}
 
 # Motia Configuration
 MOTIA_PORT=${port}
-MOTIA_ENV=development
-
-# Optional: Webhook for results
-${webhookUrl ? `WEBHOOK_URL=${webhookUrl}` : '# WEBHOOK_URL='}
-# WEBHOOK_SECRET=
 `;
 
     // Write .env file
@@ -86,6 +72,7 @@ ${webhookUrl ? `WEBHOOK_URL=${webhookUrl}` : '# WEBHOOK_URL='}
     console.log('2. Start the development server: npm run dev');
     console.log('3. Open http://localhost:' + port + ' to view the Motia Workbench');
     console.log('\n📚 Check README.md for usage examples and API documentation.');
+    console.log('\n🔗 Get your Firecrawl API key at: https://firecrawl.dev');
 
   } catch (error) {
     console.error('❌ Setup failed:', error.message);
