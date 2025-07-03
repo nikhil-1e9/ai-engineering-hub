@@ -1,0 +1,8 @@
+{
+  "url": "https://techcrunch.com/2024/01/15/openai-gpt-4-turbo-preview",
+  "options": {
+    "timeout": 30000,
+    "waitForSelector": ".article-content"
+  }
+}
+
