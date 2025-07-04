@@ -51,6 +51,14 @@ async function setup() {
       return;
     }
 
+    // Get Typefully API key
+    const typefullyKey = await askQuestion('Typefully API Key (required): ');
+    if (!typefullyKey.trim()) {
+      console.log('❌ Typefully API Key is required. Setup cancelled.');
+      rl.close();
+      return;
+    }
+
     // Get optional port
     const port = await askQuestion('Motia Port (default: 3000): ') || '3000';
 
@@ -58,6 +66,7 @@ async function setup() {
     const envContent = `# Required API Keys
 OPENAI_API_KEY=${openaiKey}
 FIRECRAWL_API_KEY=${firecrawlKey}
+TYPEFULLY_API_KEY=${typefullyKey}
 
 # Motia Configuration
 MOTIA_PORT=${port}
@@ -73,6 +82,7 @@ MOTIA_PORT=${port}
     console.log('3. Open http://localhost:' + port + ' to view the Motia Workbench');
     console.log('\n📚 Check README.md for usage examples and API documentation.');
     console.log('\n🔗 Get your Firecrawl API key at: https://firecrawl.dev');
+    console.log('🔗 Get your Typefully API key at: https://typefully.com/api');
 
   } catch (error) {
     console.error('❌ Setup failed:', error.message);
@@ -82,4 +92,3 @@ MOTIA_PORT=${port}
 }
 
 setup();
-

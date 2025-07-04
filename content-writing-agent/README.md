@@ -1,6 +1,6 @@
 # Content Writing Agent 🤖✍️
 
-An AI-powered content writing agent built with [Motia](https://motia.dev) that automatically scrapes developer-focused articles and generates viral social media content for Twitter and LinkedIn.
+An AI-powered content writing agent built with [Motia](https://motia.dev) that automatically scrapes developer-focused articles, generates viral social media content, and schedules posts using Typefully.
 
 ## 🚀 Features
 
@@ -8,15 +8,16 @@ An AI-powered content writing agent built with [Motia](https://motia.dev) that a
 - **AI-Powered Strategy**: Analyzes content with GPT-4o to create targeted content strategies
 - **Developer-Focused**: Optimized for software engineering, AI/ML, and tech content
 - **Multi-Platform Generation**: Creates platform-specific content for Twitter and LinkedIn
-- **Event-Driven Architecture**: Built on Motia's robust workflow system
+- **Automated Scheduling**: Schedules posts using Typefully API
+- **Event-Driven Architecture**: Built on Motia's robust workflow system with TypeScript
 - **Real-time Processing**: Track your content generation pipeline in the Motia Workbench
 
 ## 🏗️ Architecture
 
-Simple 3-step workflow:
+Clean 4-step workflow:
 
 ```
-API Request → Scrape with Firecrawl → Analyze & Strategy → Generate Content
+API Request → Scrape with Firecrawl → Analyze & Strategy → Generate Content → Schedule Posts
 ```
 
 ### Steps Overview
@@ -25,6 +26,7 @@ API Request → Scrape with Firecrawl → Analyze & Strategy → Generate Conten
 2. **Scrape Step**: Extracts content using Firecrawl in markdown format
 3. **Analyze Step**: Uses GPT-4o to analyze content and create content strategy
 4. **Generate Step**: Creates Twitter and LinkedIn content based on strategy
+5. **Schedule Step**: Schedules posts using Typefully API
 
 ## 🛠️ Setup
 
@@ -33,6 +35,7 @@ API Request → Scrape with Firecrawl → Analyze & Strategy → Generate Conten
 - Node.js 18+
 - OpenAI API key
 - Firecrawl API key (get one at [firecrawl.dev](https://firecrawl.dev))
+- Typefully API key (get one at [typefully.com/api](https://typefully.com/api))
 
 ### Installation
 
@@ -48,13 +51,14 @@ API Request → Scrape with Firecrawl → Analyze & Strategy → Generate Conten
 
 3. **Set up environment variables**:
    ```bash
-   cp .env.example .env
+   npm run setup
    ```
    
-   Edit `.env` and add your API keys:
+   Or manually create `.env`:
    ```env
    OPENAI_API_KEY=your_openai_api_key_here
    FIRECRAWL_API_KEY=your_firecrawl_api_key_here
+   TYPEFULLY_API_KEY=your_typefully_api_key_here
    MOTIA_PORT=3000
    ```
 
@@ -68,7 +72,7 @@ API Request → Scrape with Firecrawl → Analyze & Strategy → Generate Conten
 
 ## 📡 API Usage
 
-### Generate Content
+### Generate & Schedule Content
 
 **Endpoint**: `POST /generate-content`
 
@@ -97,21 +101,23 @@ curl -X POST http://localhost:3000/generate-content \
   -d '{"url": "https://techcrunch.com/2024/01/15/ai-breakthrough-article"}'
 ```
 
-## 📊 Generated Content
+## 📊 Generated & Scheduled Content
 
-The system creates developer-focused content optimized for each platform:
+The system creates developer-focused content optimized for each platform and automatically schedules them:
 
 ### Twitter Content
 - Single tweets or threads (3-5 tweets)
 - Technical insights and key takeaways
 - Developer-relevant hashtags
 - Engaging hooks for maximum reach
+- **Scheduled 1 hour after generation**
 
 ### LinkedIn Content  
 - Professional long-form posts (1000-2000 characters)
 - Industry insights and analysis
 - Call-to-action for engagement
 - Professional networking hashtags
+- **Scheduled 2 hours after generation**
 
 ## 🎯 Target Audience
 
@@ -145,23 +151,9 @@ The system provides detailed logging:
 🎉 Content generated successfully!
 📱 Twitter: 3 tweet(s)
 💼 LinkedIn: 1,456 characters
-```
-
-## 🚨 Error Handling
-
-The system includes comprehensive error handling:
-- Invalid URL validation
-- Firecrawl scraping failures
-- OpenAI API errors
-- Graceful error reporting and logging
-
-## 🧪 Testing
-
-```bash
-# Test with a developer-focused article
-curl -X POST http://localhost:3000/generate-content \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://blog.openai.com/gpt-4"}'
+📅 Scheduling posts for: AI Breakthrough
+🐦 Twitter scheduled: Draft ID abc123
+💼 LinkedIn scheduled: Draft ID def456
 ```
 
 ## 📁 Project Structure
@@ -169,14 +161,19 @@ curl -X POST http://localhost:3000/generate-content \
 ```
 content-writing-agent/
 ├── steps/
-│   ├── api.step.js          # HTTP API endpoint
-│   ├── scrape.step.js       # Firecrawl scraping
-│   ├── analyze.step.js      # Content analysis & strategy
-│   ├── generate.step.js     # Content generation
-│   ├── complete.step.js     # Success logging
-│   └── error.step.js        # Error handling
+│   ├── api.step.ts          # HTTP API endpoint
+│   ├── scrape.step.ts       # Firecrawl scraping
+│   ├── analyze.step.ts      # Content analysis & strategy
+│   ├── generate.step.ts     # Content generation
+│   ├── schedule.step.ts     # Typefully scheduling
+│   └── complete.step.ts     # Success logging
+├── prompts/
+│   ├── analyze-content.txt  # Content analysis prompt
+│   ├── generate-twitter.txt # Twitter generation prompt
+│   └── generate-linkedin.txt# LinkedIn generation prompt
 ├── types/events.ts          # TypeScript event definitions
-├── config/index.js          # Simple configuration
+├── config/index.js          # Configuration
+├── tsconfig.json           # TypeScript configuration
 ├── package.json
 ├── .env.example
 └── README.md
@@ -184,13 +181,31 @@ content-writing-agent/
 
 ## 🔧 Configuration
 
-Minimal configuration required:
+Required environment variables:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `OPENAI_API_KEY` | OpenAI API key | ✅ |
 | `FIRECRAWL_API_KEY` | Firecrawl API key | ✅ |
+| `TYPEFULLY_API_KEY` | Typefully API key | ✅ |
 | `MOTIA_PORT` | Server port | ❌ (default: 3000) |
+
+## 📝 Customizing Prompts
+
+The system uses separate text files for prompts, making them easy to modify:
+
+- `prompts/analyze-content.txt` - Content analysis and strategy creation
+- `prompts/generate-twitter.txt` - Twitter content generation
+- `prompts/generate-linkedin.txt` - LinkedIn content generation
+
+Simply edit these files to customize the AI behavior without touching the code.
+
+## 📅 Scheduling Behavior
+
+- **Twitter posts**: Scheduled 1 hour after generation
+- **LinkedIn posts**: Scheduled 2 hours after generation
+- **Draft management**: All posts are created as drafts in Typefully
+- **Manual control**: You can modify or publish drafts manually in Typefully
 
 ## 🎯 Use Cases
 
@@ -205,12 +220,25 @@ Perfect for:
 
 1. Clone the repository
 2. Install dependencies: `npm install`
-3. Set up your API keys in `.env`
+3. Set up your API keys: `npm run setup`
 4. Start the server: `npm run dev`
 5. Open `http://localhost:3000` to see the Motia Workbench
 6. Send a POST request to `/generate-content` with an article URL
 
-That's it! The system will automatically scrape, analyze, and generate developer-focused social media content.
+The system will automatically scrape, analyze, generate, and schedule developer-focused social media content!
+
+## 🧪 Example Flow
+
+```bash
+# 1. Generate content
+curl -X POST http://localhost:3000/generate-content \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://blog.openai.com/gpt-4"}'
+
+# 2. Check Motia Workbench at http://localhost:3000
+# 3. View scheduled posts in your Typefully dashboard
+# 4. Modify or publish drafts as needed
+```
 
 ## 📄 License
 

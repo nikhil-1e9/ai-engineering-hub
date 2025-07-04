@@ -14,8 +14,12 @@ const config = {
     port: parseInt(process.env.MOTIA_PORT) || 3000,
   },
 
+  typefully: {
+    apiKey: process.env.TYPEFULLY_API_KEY,
+  },
+
   validate() {
-    const required = ['OPENAI_API_KEY', 'FIRECRAWL_API_KEY'];
+    const required = ['OPENAI_API_KEY', 'FIRECRAWL_API_KEY', 'TYPEFULLY_API_KEY'];
     const missing = required.filter(key => !process.env[key]);
     
     if (missing.length > 0) {
@@ -27,4 +31,3 @@ const config = {
 config.validate();
 
 module.exports = config;
-

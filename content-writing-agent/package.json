@@ -20,10 +20,16 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "@motia/core": "^0.1.0",
+    "motia": "^0.1.0",
     "@mendable/firecrawl-js": "^1.0.0",
     "openai": "^4.20.0",
-    "dotenv": "^16.3.0"
+    "dotenv": "^16.3.0",
+    "zod": "^3.22.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "typescript": "^5.2.0"
   },
   "engines": {
     "node": ">=18.0.0"
