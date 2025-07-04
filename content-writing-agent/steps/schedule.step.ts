@@ -19,7 +19,13 @@ export const config: EventConfig = {
       twitter: z.any(),
       linkedin: z.any()
     }),
-    metadata: z.any()
+    metadata: z.any(),
+    schedulingPreferences: z.object({
+      scheduleTwitter: z.boolean(),
+      scheduleLinkedIn: z.boolean(),
+      twitterScheduleTime: z.string().optional(),
+      linkedinScheduleTime: z.string().optional()
+    }).optional()
   }),
   flows: ['content-generation']
 }
@@ -27,33 +33,58 @@ export const config: EventConfig = {
 export const handler: Handlers['SchedulePosts'] = async (input, { emit, logger }) => {
   logger.info(`📅 Scheduling posts for: ${input.title}`)
   
+  const preferences = input.schedulingPreferences || {
+    scheduleTwitter: true,
+    scheduleLinkedIn: true
+  }
+  
   const typefullyHeaders = {
     'Authorization': `Bearer ${config.typefully.apiKey}`,
     'Content-Type': 'application/json'
   }
 
-  // Schedule Twitter content
-  const twitterTweets = input.content.twitter.tweets.map((tweet: any) => tweet.text)
-  
-  const twitterScheduleResponse = await axios.post('https://api.typefully.com/v1/drafts/', {
-    content: twitterTweets,
-    schedule_date: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // Schedule 1 hour from now
-    auto_retweet_enabled: false
-  }, { headers: typefullyHeaders })
+  let twitterDraftId: string | undefined
+  let linkedinDraftId: string | undefined
 
-  logger.info(`🐦 Twitter scheduled: Draft ID ${twitterScheduleResponse.data.id}`)
-
-  // Schedule LinkedIn content (if Typefully supports LinkedIn, otherwise just log)
-  try {
-    const linkedinScheduleResponse = await axios.post('https://api.typefully.com/v1/drafts/', {
-      content: [input.content.linkedin.post],
-      schedule_date: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // Schedule 2 hours from now
+  // Schedule Twitter content if requested
+  if (preferences.scheduleTwitter) {
+    const twitterTweets = input.content.twitter.tweets.map((tweet: any) => tweet.text)
+    const twitterScheduleTime = preferences.twitterScheduleTime 
+      ? new Date(preferences.twitterScheduleTime).toISOString()
+      : new Date(Date.now() + 60 * 60 * 1000).toISOString() // Default: 1 hour from now
+    
+    const twitterScheduleResponse = await axios.post('https://api.typefully.com/v1/drafts/', {
+      content: twitterTweets,
+      schedule_date: twitterScheduleTime,
       auto_retweet_enabled: false
     }, { headers: typefullyHeaders })
 
-    logger.info(`💼 LinkedIn scheduled: Draft ID ${linkedinScheduleResponse.data.id}`)
-  } catch (error) {
-    logger.info(`💼 LinkedIn content ready (manual posting required): ${input.content.linkedin.post.substring(0, 100)}...`)
+    twitterDraftId = twitterScheduleResponse.data.id
+    logger.info(`🐦 Twitter scheduled: Draft ID ${twitterDraftId}`)
+  } else {
+    logger.info(`🐦 Twitter scheduling skipped by user`)
+  }
+
+  // Schedule LinkedIn content if requested
+  if (preferences.scheduleLinkedIn) {
+    try {
+      const linkedinScheduleTime = preferences.linkedinScheduleTime
+        ? new Date(preferences.linkedinScheduleTime).toISOString()
+        : new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString() // Default: 2 hours from now
+
+      const linkedinScheduleResponse = await axios.post('https://api.typefully.com/v1/drafts/', {
+        content: [input.content.linkedin.post],
+        schedule_date: linkedinScheduleTime,
+        auto_retweet_enabled: false
+      }, { headers: typefullyHeaders })
+
+      linkedinDraftId = linkedinScheduleResponse.data.id
+      logger.info(`💼 LinkedIn scheduled: Draft ID ${linkedinDraftId}`)
+    } catch (error) {
+      logger.info(`💼 LinkedIn content ready (manual posting required): ${input.content.linkedin.post.substring(0, 100)}...`)
+    }
+  } else {
+    logger.info(`💼 LinkedIn scheduling skipped by user`)
   }
 
   await emit({
@@ -61,8 +92,9 @@ export const handler: Handlers['SchedulePosts'] = async (input, { emit, logger }
     data: {
       ...input,
       scheduledAt: new Date().toISOString(),
-      twitterDraftId: twitterScheduleResponse.data.id
+      twitterDraftId,
+      linkedinDraftId,
+      schedulingPreferences: preferences
     }
   })
 }
-

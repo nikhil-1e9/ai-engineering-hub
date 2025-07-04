@@ -17,7 +17,9 @@ export const config: EventConfig = {
     }),
     metadata: z.any(),
     scheduledAt: z.string(),
-    twitterDraftId: z.string().optional()
+    twitterDraftId: z.string().optional(),
+    linkedinDraftId: z.string().optional(),
+    schedulingPreferences: z.any().optional()
   }),
   flows: ['content-generation']
 }
@@ -30,8 +32,19 @@ export const handler: Handlers['ContentComplete'] = async (input, { logger }) =>
   logger.info(`⏱️ Processing Time: ${input.metadata.processingTime}ms`)
   logger.info(`📅 Scheduled At: ${input.scheduledAt}`)
   
+  const prefs = input.schedulingPreferences
+  if (prefs) {
+    logger.info(`\n📋 Scheduling Preferences:`)
+    logger.info(`  🐦 Twitter: ${prefs.scheduleTwitter ? 'Scheduled' : 'Skipped'}`)
+    logger.info(`  💼 LinkedIn: ${prefs.scheduleLinkedIn ? 'Scheduled' : 'Skipped'}`)
+  }
+  
   if (input.twitterDraftId) {
     logger.info(`🐦 Twitter Draft ID: ${input.twitterDraftId}`)
+  }
+  
+  if (input.linkedinDraftId) {
+    logger.info(`💼 LinkedIn Draft ID: ${input.linkedinDraftId}`)
   }
   
   logger.info(`\n📱 Twitter Content:`)
@@ -45,4 +58,3 @@ export const handler: Handlers['ContentComplete'] = async (input, { logger }) =>
   
   logger.info(`\n✅ Request ${input.requestId} completed successfully!\n`)
 }
-

@@ -14,10 +14,11 @@ An AI-powered content writing agent built with [Motia](https://motia.dev) that a
 
 ## 🏗️ Architecture
 
-Clean 4-step workflow:
+Clean 2-phase workflow with user control:
 
 ```
-API Request → Scrape with Firecrawl → Analyze & Strategy → Generate Content → Schedule Posts
+Phase 1: API Request → Scrape → Analyze → Generate → Store for Review
+Phase 2: Review Content → Approve/Schedule → Typefully Integration
 ```
 
 ### Steps Overview
@@ -26,7 +27,9 @@ API Request → Scrape with Firecrawl → Analyze & Strategy → Generate Conten
 2. **Scrape Step**: Extracts content using Firecrawl in markdown format
 3. **Analyze Step**: Uses GPT-4o to analyze content and create content strategy
 4. **Generate Step**: Creates Twitter and LinkedIn content based on strategy
-5. **Schedule Step**: Schedules posts using Typefully API
+5. **Review Step**: Stores content and provides review endpoints
+6. **Schedule API**: Allows user to approve and schedule posts
+7. **Schedule Step**: Schedules approved posts using Typefully API
 
 ## 🛠️ Setup
 
@@ -72,7 +75,7 @@ API Request → Scrape with Firecrawl → Analyze & Strategy → Generate Conten
 
 ## 📡 API Usage
 
-### Generate & Schedule Content
+### Phase 1: Generate Content
 
 **Endpoint**: `POST /generate-content`
 
@@ -93,31 +96,95 @@ API Request → Scrape with Firecrawl → Analyze & Strategy → Generate Conten
 }
 ```
 
-### Example cURL Request
+### Phase 2: Review Generated Content
+
+**Endpoint**: `GET /content/:requestId`
+
+**Response**:
+```json
+{
+  "requestId": "uuid-here",
+  "title": "Article Title",
+  "url": "https://example.com/article",
+  "content": {
+    "twitter": {
+      "tweets": [{"text": "Tweet content...", "order": 1}],
+      "totalTweets": 3
+    },
+    "linkedin": {
+      "post": "LinkedIn post content...",
+      "characterCount": 1456
+    }
+  },
+  "schedulingEndpoint": "/schedule-content/uuid-here"
+}
+```
+
+### Phase 3: Schedule Posts
+
+**Endpoint**: `POST /schedule-content/:requestId`
+
+**Request Body**:
+```json
+{
+  "approve": true,
+  "scheduleTwitter": true,
+  "scheduleLinkedIn": true,
+  "twitterScheduleTime": "2024-01-15T15:00:00Z",
+  "linkedinScheduleTime": "2024-01-15T17:00:00Z"
+}
+```
+
+**Response**:
+```json
+{
+  "message": "Content scheduling initiated",
+  "requestId": "uuid-here",
+  "scheduled": {
+    "twitter": true,
+    "linkedin": true
+  }
+}
+```
+
+### Example Workflow
 
 ```bash
+# 1. Generate content
 curl -X POST http://localhost:3000/generate-content \
   -H "Content-Type: application/json" \
   -d '{"url": "https://techcrunch.com/2024/01/15/ai-breakthrough-article"}'
+
+# 2. Review generated content (use requestId from step 1)
+curl -X GET http://localhost:3000/content/your-request-id
+
+# 3. Schedule posts (approve and customize timing)
+curl -X POST http://localhost:3000/schedule-content/your-request-id \
+  -H "Content-Type: application/json" \
+  -d '{"approve": true, "scheduleTwitter": true, "scheduleLinkedIn": true}'
 ```
 
-## 📊 Generated & Scheduled Content
+## 📊 Generated Content & User Control
 
-The system creates developer-focused content optimized for each platform and automatically schedules them:
+The system creates developer-focused content optimized for each platform with full user control over scheduling:
 
 ### Twitter Content
 - Single tweets or threads (3-5 tweets)
 - Technical insights and key takeaways
 - Developer-relevant hashtags
 - Engaging hooks for maximum reach
-- **Scheduled 1 hour after generation**
 
 ### LinkedIn Content  
 - Professional long-form posts (1000-2000 characters)
 - Industry insights and analysis
 - Call-to-action for engagement
 - Professional networking hashtags
-- **Scheduled 2 hours after generation**
+
+### Scheduling Control
+- **Review before scheduling**: All content is generated and stored for review
+- **Selective scheduling**: Choose to schedule Twitter, LinkedIn, or both
+- **Custom timing**: Set specific schedule times or use defaults (1hr for Twitter, 2hr for LinkedIn)
+- **Draft management**: All posts created as drafts in Typefully for final review
 
 ## 🎯 Target Audience
 
@@ -143,6 +210,7 @@ The Motia Workbench provides real-time visualization:
 The system provides detailed logging:
 
 ```bash
+# Phase 1: Content Generation
 🕷️ Scraping article: https://example.com/article
 ✅ Successfully scraped: "AI Breakthrough" (5,247 characters)
 🧠 Analyzing content: AI Breakthrough
@@ -151,6 +219,13 @@ The system provides detailed logging:
 🎉 Content generated successfully!
 📱 Twitter: 3 tweet(s)
 💼 LinkedIn: 1,456 characters
+📋 Content ready for review: AI Breakthrough
+
+📅 To schedule posts, make a POST request to:
+   /schedule-content/your-request-id
+
+# Phase 2: User Approval & Scheduling
+✅ User approved scheduling for request abc-123
 📅 Scheduling posts for: AI Breakthrough
 🐦 Twitter scheduled: Draft ID abc123
 💼 LinkedIn scheduled: Draft ID def456
@@ -161,10 +236,13 @@ The system provides detailed logging:
 ```
 content-writing-agent/
 ├── steps/
-│   ├── api.step.ts          # HTTP API endpoint
+│   ├── api.step.ts          # HTTP endpoint for content generation
 │   ├── scrape.step.ts       # Firecrawl scraping
 │   ├── analyze.step.ts      # Content analysis & strategy
 │   ├── generate.step.ts     # Content generation
+│   ├── review.step.ts       # Content storage for review
+│   ├── get-content.step.ts  # API endpoint to retrieve content
+│   ├── schedule-api.step.ts # API endpoint for scheduling control
 │   ├── schedule.step.ts     # Typefully scheduling
 │   └── complete.step.ts     # Success logging
 ├── prompts/
@@ -247,4 +325,3 @@ MIT License
 ---
 
 Built with ❤️ using [Motia](https://motia.dev) - The unified backend framework for APIs, Events, and AI Agents.
-

@@ -57,6 +57,36 @@ export interface LinkedInContent {
   characterCount: number
 }
 
+export interface ContentReadyEvent {
+  requestId: string
+  url: string
+  title: string
+  strategy: ContentStrategy
+  content: {
+    twitter: TwitterContent
+    linkedin: LinkedInContent
+  }
+  metadata: {
+    generatedAt: string
+    processingTime: number
+    targetAudience: string
+  }
+}
+
+export interface ContentStoredEvent {
+  requestId: string
+  title: string
+  url: string
+  storedAt: string
+}
+
+export interface SchedulingPreferences {
+  scheduleTwitter: boolean
+  scheduleLinkedIn: boolean
+  twitterScheduleTime?: string
+  linkedinScheduleTime?: string
+}
+
 export interface SchedulePostsEvent {
   requestId: string
   url: string
@@ -71,6 +101,7 @@ export interface SchedulePostsEvent {
     processingTime: number
     targetAudience: string
   }
+  schedulingPreferences?: SchedulingPreferences
 }
 
 export interface ContentCompleteEvent {
@@ -88,5 +119,6 @@ export interface ContentCompleteEvent {
   }
   scheduledAt: string
   twitterDraftId?: string
+  linkedinDraftId?: string
+  schedulingPreferences?: SchedulingPreferences
 }
-

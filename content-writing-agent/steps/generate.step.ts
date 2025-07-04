@@ -15,7 +15,7 @@ export const config: EventConfig = {
   name: 'GenerateSocialContent',
   description: 'Generates Twitter and LinkedIn content based on strategy',
   subscribes: ['generate-content'],
-  emits: ['schedule-posts'],
+  emits: ['content-ready'],
   input: z.object({
     requestId: z.string(),
     url: z.string().url(),
@@ -70,7 +70,7 @@ export const handler: Handlers['GenerateSocialContent'] = async (input, { emit, 
   logger.info(`💼 LinkedIn: ${linkedinContent.characterCount} characters`)
 
   await emit({
-    topic: 'schedule-posts',
+    topic: 'content-ready',
     data: {
       requestId: input.requestId,
       url: input.url,
